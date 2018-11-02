@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+import "communicator_objects/resolution_proto.proto";
+import "communicator_objects/brain_type_proto.proto";
+import "communicator_objects/space_type_proto.proto";
+
+option csharp_namespace = "MLAgents.CommunicatorObjects";
+package communicator_objects;
+
+message BrainParametersProto {
+    int32 vector_observation_size = 1;
+	int32 vector_observation_2D_length = 2;
+	int32 vector_observation_2D_width = 3;
+    int32 num_stacked_vector_observations = 4;
+    int32 vector_action_size = 5;
+    repeated ResolutionProto camera_resolutions = 6;
+    repeated string vector_action_descriptions = 7;
+    SpaceTypeProto vector_action_space_type = 8;
+	SpaceTypeProto vector_observation_space_type = 9;
+    string brain_name = 10;
+    BrainTypeProto brain_type = 11;
+}

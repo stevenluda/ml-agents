@@ -11,6 +11,7 @@ class LearningModel(object):
     def __init__(self, m_size, normalize, use_recurrent, brain):
         self.brain = brain
         self.vector_in = None
+        self.vector_2D_in = None
         self.normalize = False
         self.use_recurrent = False
         self.global_step, self.increment_step = self.create_global_steps()
@@ -24,6 +25,9 @@ class LearningModel(object):
         self.use_recurrent = use_recurrent
         self.a_size = brain.vector_action_space_size
         self.o_size = brain.vector_observation_space_size * brain.num_stacked_vector_observations
+        self.o_2d_size = brain.vector_observation_2D_length * brain.vector_observation_2D_width  * brain.num_stacked_vector_observations
+        self.o_2d_length = brain.vector_observation_2D_length
+        self.o_2d_width = brain.vector_observation_2D_width
         self.v_size = brain.number_visual_observations
 
     @staticmethod
@@ -57,6 +61,15 @@ class LearningModel(object):
 
         visual_in = tf.placeholder(shape=[None, o_size_h, o_size_w, c_channels], dtype=tf.float32, name=name)
         return visual_in
+
+    def create_vector_2D_input(self, name='vector_observation_2D'):
+        """
+        Creates ops for vector observation input.
+        :param name: Name of the placeholder op.
+        :return:
+        """
+        self.vector_2D_in = tf.placeholder(shape=[None, self.o_2d_length, self.o_2d_width, 1], dtype=tf.float32, name=name)
+        return self.vector_2D_in
 
     def create_vector_input(self, name='vector_observation'):
         """
@@ -136,6 +149,30 @@ class LearningModel(object):
                                                                      num_layers, scope, reuse)
         return hidden_flat
 
+    def create_continuous_observation_2D_encoder(self, vector_observation_2D_input, h_size, activation, num_layers,
+                                                 scope, reuse, name = 'vector_observation_2D'):
+        """
+        Builds a set of visual (CNN) encoders.
+        :param reuse: Whether to re-use the weights within the same scope.
+        :param scope: The scope of the graph within which to create the ops.
+        :param h_size: Hidden layer size.
+        :param activation: What type of activation function to use for layers.
+        :param num_layers: number of hidden layers to create.
+        :param name: The placeholder for the vector observation 2D input to use.
+        :return: List of hidden layer tensors.
+        """
+        with tf.variable_scope(scope):
+            conv1 = tf.layers.conv2d(vector_observation_2D_input, 16, kernel_size=[8, 8], strides=1,
+                                     activation=tf.nn.elu, reuse=reuse, name="vec_obs_2D_conv_1")
+            conv2 = tf.layers.conv2d(conv1, 32, kernel_size=[4, 4], strides=[2, 2],
+                                     activation=tf.nn.elu, reuse=reuse, name="vec_obs_2D_conv_2")
+            hidden = c_layers.flatten(conv2)
+
+        with tf.variable_scope(scope+'/'+'flat_encoding'):
+            hidden_flat = self.create_continuous_observation_encoder(hidden, h_size, activation,
+                                                                     num_layers, scope, reuse)
+        return hidden_flat
+
     @staticmethod
     def create_discrete_observation_encoder(observation_input, s_size, h_size, activation,
                                             num_layers, scope, reuse):
@@ -175,11 +212,12 @@ class LearningModel(object):
             visual_input = self.create_visual_input(brain.camera_resolutions[i], name="visual_observation_" + str(i))
             self.visual_in.append(visual_input)
         vector_observation_input = self.create_vector_input()
+        vector_observation_2D_input = self.create_vector_2D_input()
 
         final_hiddens = []
         for i in range(num_streams):
             visual_encoders = []
-            hidden_state, hidden_visual = None, None
+            hidden_state, hidden_visual, hidden_state_2D = None, None, None
             if self.v_size > 0:
                 for j in range(brain.number_visual_observations):
                     encoded_visual = self.create_visual_observation_encoder(self.visual_in[j], h_size,
@@ -197,11 +235,24 @@ class LearningModel(object):
                     hidden_state = self.create_discrete_observation_encoder(vector_observation_input, self.o_size,
                                                                             h_size, activation_fn, num_layers,
                                                                             "main_graph_{}".format(i), False)
-            if hidden_state is not None and hidden_visual is not None:
-                final_hidden = tf.concat([hidden_visual, hidden_state], axis=1)
-            elif hidden_state is None and hidden_visual is not None:
+
+            if brain.vector_observation_2D_width * brain.vector_observation_2D_length > 0:
+                hidden_state_2D = self.create_continuous_observation_2D_encoder(vector_observation_2D_input, h_size,
+                                                                                activation_fn, num_layers,
+                                                                                "main_graph_{}_2D_encoder".format(i), False)
+            if hidden_state is not None and hidden_visual is not None and hidden_state_2D is not None:
+                final_hidden = tf.concat([hidden_visual, hidden_state, hidden_state_2D], axis=1)
+            elif hidden_state is not None and hidden_visual is None and hidden_state_2D is not None:
+                final_hidden = tf.concat([hidden_state, hidden_state_2D], axis=1)
+            elif hidden_state is not None and hidden_visual is not None and hidden_state_2D is None:
+                final_hidden = tf.concat([hidden_state, hidden_visual], axis=1)
+            elif hidden_state is None and hidden_visual is not None and hidden_state_2D is not None:
+                final_hidden = tf.concat([hidden_visual, hidden_state_2D], axis=1)
+            elif hidden_state is None and hidden_visual is None and hidden_state_2D is not None:
+                final_hidden = hidden_state_2D
+            elif hidden_state is None and hidden_visual is not None and hidden_state_2D is None:
                 final_hidden = hidden_visual
-            elif hidden_state is not None and hidden_visual is None:
+            elif hidden_state is not None and hidden_visual is None and hidden_state_2D is None:
                 final_hidden = hidden_state
             else:
                 raise Exception("No valid network configuration possible. "
@@ -244,31 +295,49 @@ class LearningModel(object):
         if self.use_recurrent:
             tf.Variable(self.m_size, name="memory_size", trainable=False, dtype=tf.int32)
             self.prev_action = tf.placeholder(shape=[None], dtype=tf.int32, name='prev_action')
-            prev_action_oh = tf.one_hot(self.prev_action, self.a_size)
-            hidden = tf.concat([hidden, prev_action_oh], axis=1)
+            self.prev_action2 = tf.placeholder(shape=[None], dtype=tf.int32, name="prev_action2")
+            prev_action_oh = tf.one_hot(self.prev_action, self.a_size-600)
+            prev_action_oh2= tf.one_hot(self.prev_action2, 600)
+            hidden = tf.concat([hidden, prev_action_oh, prev_action_oh2], axis=1)
 
             self.memory_in = tf.placeholder(shape=[None, self.m_size], dtype=tf.float32, name='recurrent_in')
             hidden, memory_out = self.create_recurrent_encoder(hidden, self.memory_in, self.sequence_length)
             self.memory_out = tf.identity(memory_out, name='recurrent_out')
 
-        self.policy = tf.layers.dense(hidden, self.a_size, activation=None, use_bias=False,
+        self.policy = tf.layers.dense(hidden, self.a_size-600, activation=None, use_bias=False,
                                       kernel_initializer=c_layers.variance_scaling_initializer(factor=0.01))
-
+        self.policy2 = tf.layers.dense(hidden, 600, activation=None, use_bias=False, kernel_initializer=c_layers.variance_scaling_initializer(factor=0.01))
+        binDimensionsInfoReshaped = tf.reshape(self.vector_in,[-1,100,4])
+        binDimensionsInfoReshapedReducedSum = tf.reduce_sum(binDimensionsInfoReshaped,[2])
+        binDimensionsInfoReshapeReducedSumReplicate = tf.tile(binDimensionsInfoReshapedReducedSum,[1,6])
+        self.policy2Conditioned = tf.where(tf.equal(binDimensionsInfoReshapeReducedSumReplicate,0), self.policy2, tf.zeros_like(self.policy2))
         self.all_probs = tf.nn.softmax(self.policy, name="action_probs")
+        self.all_probs2 = tf.nn.softmax(self.policy2Conditioned, name="action_probs2")
         output = tf.multinomial(self.policy, 1)
+        # ORIGINAL: self.output = tf.identity(output, name="action")
+        output2 = tf.multinomial(self.policy2, 1)
         self.output = tf.identity(output, name="action")
+        self.output2 = tf.identity(output2, name="action2")
 
         value = tf.layers.dense(hidden, 1, activation=None)
         self.value = tf.identity(value, name="value_estimate")
-        self.entropy = -tf.reduce_sum(self.all_probs * tf.log(self.all_probs + 1e-10), axis=1)
+        entropy1 = -tf.reduce_sum(self.all_probs * tf.log(self.all_probs + 1e-10), axis=1)
+        entropy2 = -tf.reduce_sum(self.all_probs2 * tf.log(self.all_probs2 + 1e-10), axis=1)
+        self.entropy = (entropy1 + entropy2)/2.0
+
         self.action_holder = tf.placeholder(shape=[None], dtype=tf.int32)
-        self.selected_actions = tf.one_hot(self.action_holder, self.a_size)
+        self.action_holder2 = tf.placeholder(shape=[None], dtype=tf.int32)
+        #ORIGINAL self.selected_actions = tf.one_hot(self.action_holder, self.a_size)
+        self.selected_actions = tf.one_hot(self.action_holder, self.a_size-600)
+        self.selected_actions2 = tf.one_hot(self.action_holder2, 600)
 
-        self.all_old_probs = tf.placeholder(shape=[None, self.a_size], dtype=tf.float32, name='old_probabilities')
-
+        self.all_old_probs = tf.placeholder(shape=[None, self.a_size-600], dtype=tf.float32, name='old_probabilities')
+        self.all_old_probs2 = tf.placeholder(shape=[None, 600], dtype=tf.float32, name='old_probabilities2')
         # We reshape these tensors to [batch x 1] in order to be of the same rank as continuous control probabilities.
         self.probs = tf.expand_dims(tf.reduce_sum(self.all_probs * self.selected_actions, axis=1), 1)
         self.old_probs = tf.expand_dims(tf.reduce_sum(self.all_old_probs * self.selected_actions, axis=1), 1)
+        self.probs2 = tf.expand_dims(tf.reduce_sum(self.all_probs2 * self.selected_actions2, axis=1), 1)
+        self.old_probs2 = tf.expand_dims(tf.reduce_sum(self.all_old_probs2 * self.selected_actions2, axis=1), 1)
 
     def create_cc_actor_critic(self, h_size, num_layers):
         """

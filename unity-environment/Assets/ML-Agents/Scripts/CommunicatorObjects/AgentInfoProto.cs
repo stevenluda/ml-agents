@@ -25,18 +25,19 @@ namespace MLAgents.CommunicatorObjects {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
             "Citjb21tdW5pY2F0b3Jfb2JqZWN0cy9hZ2VudF9pbmZvX3Byb3RvLnByb3Rv",
-            "EhRjb21tdW5pY2F0b3Jfb2JqZWN0cyL9AQoOQWdlbnRJbmZvUHJvdG8SIgoa",
-            "c3RhY2tlZF92ZWN0b3Jfb2JzZXJ2YXRpb24YASADKAISGwoTdmlzdWFsX29i",
-            "c2VydmF0aW9ucxgCIAMoDBIYChB0ZXh0X29ic2VydmF0aW9uGAMgASgJEh0K",
-            "FXN0b3JlZF92ZWN0b3JfYWN0aW9ucxgEIAMoAhIbChNzdG9yZWRfdGV4dF9h",
-            "Y3Rpb25zGAUgASgJEhAKCG1lbW9yaWVzGAYgAygCEg4KBnJld2FyZBgHIAEo",
-            "AhIMCgRkb25lGAggASgIEhgKEG1heF9zdGVwX3JlYWNoZWQYCSABKAgSCgoC",
-            "aWQYCiABKAVCH6oCHE1MQWdlbnRzLkNvbW11bmljYXRvck9iamVjdHNiBnBy",
-            "b3RvMw=="));
+            "EhRjb21tdW5pY2F0b3Jfb2JqZWN0cyK5AgoOQWdlbnRJbmZvUHJvdG8SIgoa",
+            "c3RhY2tlZF92ZWN0b3Jfb2JzZXJ2YXRpb24YASADKAISJQodc3RhY2tlZF92",
+            "ZWN0b3Jfb2JzZXJ2YXRpb25fMkQYAiADKAISGwoTdmlzdWFsX29ic2VydmF0",
+            "aW9ucxgDIAMoDBIYChB0ZXh0X29ic2VydmF0aW9uGAQgASgJEh0KFXN0b3Jl",
+            "ZF92ZWN0b3JfYWN0aW9ucxgFIAMoAhIbChNzdG9yZWRfdGV4dF9hY3Rpb25z",
+            "GAYgASgJEhAKCG1lbW9yaWVzGAcgAygCEg4KBnJld2FyZBgIIAEoAhIMCgRk",
+            "b25lGAkgASgIEhgKEG1heF9zdGVwX3JlYWNoZWQYCiABKAgSCgoCaWQYCyAB",
+            "KAUSEwoLYWN0aW9uX21hc2sYDCADKAhCH6oCHE1MQWdlbnRzLkNvbW11bmlj",
+            "YXRvck9iamVjdHNiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::MLAgents.CommunicatorObjects.AgentInfoProto), global::MLAgents.CommunicatorObjects.AgentInfoProto.Parser, new[]{ "StackedVectorObservation", "VisualObservations", "TextObservation", "StoredVectorActions", "StoredTextActions", "Memories", "Reward", "Done", "MaxStepReached", "Id" }, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::MLAgents.CommunicatorObjects.AgentInfoProto), global::MLAgents.CommunicatorObjects.AgentInfoProto.Parser, new[]{ "StackedVectorObservation", "StackedVectorObservation2D", "VisualObservations", "TextObservation", "StoredVectorActions", "StoredTextActions", "Memories", "Reward", "Done", "MaxStepReached", "Id", "ActionMask" }, null, null, null)
           }));
     }
     #endregion
@@ -69,6 +70,7 @@ namespace MLAgents.CommunicatorObjects {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public AgentInfoProto(AgentInfoProto other) : this() {
       stackedVectorObservation_ = other.stackedVectorObservation_.Clone();
+      stackedVectorObservation2D_ = other.stackedVectorObservation2D_.Clone();
       visualObservations_ = other.visualObservations_.Clone();
       textObservation_ = other.textObservation_;
       storedVectorActions_ = other.storedVectorActions_.Clone();
@@ -78,6 +80,7 @@ namespace MLAgents.CommunicatorObjects {
       done_ = other.done_;
       maxStepReached_ = other.maxStepReached_;
       id_ = other.id_;
+      actionMask_ = other.actionMask_.Clone();
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -96,10 +99,20 @@ namespace MLAgents.CommunicatorObjects {
       get { return stackedVectorObservation_; }
     }
 
+    /// <summary>Field number for the "stacked_vector_observation_2D" field.</summary>
+    public const int StackedVectorObservation2DFieldNumber = 2;
+    private static readonly pb::FieldCodec<float> _repeated_stackedVectorObservation2D_codec
+        = pb::FieldCodec.ForFloat(18);
+    private readonly pbc::RepeatedField<float> stackedVectorObservation2D_ = new pbc::RepeatedField<float>();
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public pbc::RepeatedField<float> StackedVectorObservation2D {
+      get { return stackedVectorObservation2D_; }
+    }
+
     /// <summary>Field number for the "visual_observations" field.</summary>
-    public const int VisualObservationsFieldNumber = 2;
+    public const int VisualObservationsFieldNumber = 3;
     private static readonly pb::FieldCodec<pb::ByteString> _repeated_visualObservations_codec
-        = pb::FieldCodec.ForBytes(18);
+        = pb::FieldCodec.ForBytes(26);
     private readonly pbc::RepeatedField<pb::ByteString> visualObservations_ = new pbc::RepeatedField<pb::ByteString>();
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public pbc::RepeatedField<pb::ByteString> VisualObservations {
@@ -107,7 +120,7 @@ namespace MLAgents.CommunicatorObjects {
     }
 
     /// <summary>Field number for the "text_observation" field.</summary>
-    public const int TextObservationFieldNumber = 3;
+    public const int TextObservationFieldNumber = 4;
     private string textObservation_ = "";
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public string TextObservation {
@@ -118,9 +131,9 @@ namespace MLAgents.CommunicatorObjects {
     }
 
     /// <summary>Field number for the "stored_vector_actions" field.</summary>
-    public const int StoredVectorActionsFieldNumber = 4;
+    public const int StoredVectorActionsFieldNumber = 5;
     private static readonly pb::FieldCodec<float> _repeated_storedVectorActions_codec
-        = pb::FieldCodec.ForFloat(34);
+        = pb::FieldCodec.ForFloat(42);
     private readonly pbc::RepeatedField<float> storedVectorActions_ = new pbc::RepeatedField<float>();
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public pbc::RepeatedField<float> StoredVectorActions {
@@ -128,7 +141,7 @@ namespace MLAgents.CommunicatorObjects {
     }
 
     /// <summary>Field number for the "stored_text_actions" field.</summary>
-    public const int StoredTextActionsFieldNumber = 5;
+    public const int StoredTextActionsFieldNumber = 6;
     private string storedTextActions_ = "";
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public string StoredTextActions {
@@ -139,9 +152,9 @@ namespace MLAgents.CommunicatorObjects {
     }
 
     /// <summary>Field number for the "memories" field.</summary>
-    public const int MemoriesFieldNumber = 6;
+    public const int MemoriesFieldNumber = 7;
     private static readonly pb::FieldCodec<float> _repeated_memories_codec
-        = pb::FieldCodec.ForFloat(50);
+        = pb::FieldCodec.ForFloat(58);
     private readonly pbc::RepeatedField<float> memories_ = new pbc::RepeatedField<float>();
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public pbc::RepeatedField<float> Memories {
@@ -149,7 +162,7 @@ namespace MLAgents.CommunicatorObjects {
     }
 
     /// <summary>Field number for the "reward" field.</summary>
-    public const int RewardFieldNumber = 7;
+    public const int RewardFieldNumber = 8;
     private float reward_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public float Reward {
@@ -160,7 +173,7 @@ namespace MLAgents.CommunicatorObjects {
     }
 
     /// <summary>Field number for the "done" field.</summary>
-    public const int DoneFieldNumber = 8;
+    public const int DoneFieldNumber = 9;
     private bool done_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public bool Done {
@@ -171,7 +184,7 @@ namespace MLAgents.CommunicatorObjects {
     }
 
     /// <summary>Field number for the "max_step_reached" field.</summary>
-    public const int MaxStepReachedFieldNumber = 9;
+    public const int MaxStepReachedFieldNumber = 10;
     private bool maxStepReached_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public bool MaxStepReached {
@@ -182,7 +195,7 @@ namespace MLAgents.CommunicatorObjects {
     }
 
     /// <summary>Field number for the "id" field.</summary>
-    public const int IdFieldNumber = 10;
+    public const int IdFieldNumber = 11;
     private int id_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int Id {
@@ -190,6 +203,16 @@ namespace MLAgents.CommunicatorObjects {
       set {
         id_ = value;
       }
+    }
+
+    /// <summary>Field number for the "action_mask" field.</summary>
+    public const int ActionMaskFieldNumber = 12;
+    private static readonly pb::FieldCodec<bool> _repeated_actionMask_codec
+        = pb::FieldCodec.ForBool(98);
+    private readonly pbc::RepeatedField<bool> actionMask_ = new pbc::RepeatedField<bool>();
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public pbc::RepeatedField<bool> ActionMask {
+      get { return actionMask_; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -206,6 +229,7 @@ namespace MLAgents.CommunicatorObjects {
         return true;
       }
       if(!stackedVectorObservation_.Equals(other.stackedVectorObservation_)) return false;
+      if(!stackedVectorObservation2D_.Equals(other.stackedVectorObservation2D_)) return false;
       if(!visualObservations_.Equals(other.visualObservations_)) return false;
       if (TextObservation != other.TextObservation) return false;
       if(!storedVectorActions_.Equals(other.storedVectorActions_)) return false;
@@ -215,6 +239,7 @@ namespace MLAgents.CommunicatorObjects {
       if (Done != other.Done) return false;
       if (MaxStepReached != other.MaxStepReached) return false;
       if (Id != other.Id) return false;
+      if(!actionMask_.Equals(other.actionMask_)) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -222,6 +247,7 @@ namespace MLAgents.CommunicatorObjects {
     public override int GetHashCode() {
       int hash = 1;
       hash ^= stackedVectorObservation_.GetHashCode();
+      hash ^= stackedVectorObservation2D_.GetHashCode();
       hash ^= visualObservations_.GetHashCode();
       if (TextObservation.Length != 0) hash ^= TextObservation.GetHashCode();
       hash ^= storedVectorActions_.GetHashCode();
@@ -231,6 +257,7 @@ namespace MLAgents.CommunicatorObjects {
       if (Done != false) hash ^= Done.GetHashCode();
       if (MaxStepReached != false) hash ^= MaxStepReached.GetHashCode();
       if (Id != 0) hash ^= Id.GetHashCode();
+      hash ^= actionMask_.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -245,33 +272,35 @@ namespace MLAgents.CommunicatorObjects {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void WriteTo(pb::CodedOutputStream output) {
       stackedVectorObservation_.WriteTo(output, _repeated_stackedVectorObservation_codec);
+      stackedVectorObservation2D_.WriteTo(output, _repeated_stackedVectorObservation2D_codec);
       visualObservations_.WriteTo(output, _repeated_visualObservations_codec);
       if (TextObservation.Length != 0) {
-        output.WriteRawTag(26);
+        output.WriteRawTag(34);
         output.WriteString(TextObservation);
       }
       storedVectorActions_.WriteTo(output, _repeated_storedVectorActions_codec);
       if (StoredTextActions.Length != 0) {
-        output.WriteRawTag(42);
+        output.WriteRawTag(50);
         output.WriteString(StoredTextActions);
       }
       memories_.WriteTo(output, _repeated_memories_codec);
       if (Reward != 0F) {
-        output.WriteRawTag(61);
+        output.WriteRawTag(69);
         output.WriteFloat(Reward);
       }
       if (Done != false) {
-        output.WriteRawTag(64);
+        output.WriteRawTag(72);
         output.WriteBool(Done);
       }
       if (MaxStepReached != false) {
-        output.WriteRawTag(72);
+        output.WriteRawTag(80);
         output.WriteBool(MaxStepReached);
       }
       if (Id != 0) {
-        output.WriteRawTag(80);
+        output.WriteRawTag(88);
         output.WriteInt32(Id);
       }
+      actionMask_.WriteTo(output, _repeated_actionMask_codec);
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -281,6 +310,7 @@ namespace MLAgents.CommunicatorObjects {
     public int CalculateSize() {
       int size = 0;
       size += stackedVectorObservation_.CalculateSize(_repeated_stackedVectorObservation_codec);
+      size += stackedVectorObservation2D_.CalculateSize(_repeated_stackedVectorObservation2D_codec);
       size += visualObservations_.CalculateSize(_repeated_visualObservations_codec);
       if (TextObservation.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(TextObservation);
@@ -302,6 +332,7 @@ namespace MLAgents.CommunicatorObjects {
       if (Id != 0) {
         size += 1 + pb::CodedOutputStream.ComputeInt32Size(Id);
       }
+      size += actionMask_.CalculateSize(_repeated_actionMask_codec);
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
       }
@@ -314,6 +345,7 @@ namespace MLAgents.CommunicatorObjects {
         return;
       }
       stackedVectorObservation_.Add(other.stackedVectorObservation_);
+      stackedVectorObservation2D_.Add(other.stackedVectorObservation2D_);
       visualObservations_.Add(other.visualObservations_);
       if (other.TextObservation.Length != 0) {
         TextObservation = other.TextObservation;
@@ -335,6 +367,7 @@ namespace MLAgents.CommunicatorObjects {
       if (other.Id != 0) {
         Id = other.Id;
       }
+      actionMask_.Add(other.actionMask_);
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
 
@@ -351,42 +384,52 @@ namespace MLAgents.CommunicatorObjects {
             stackedVectorObservation_.AddEntriesFrom(input, _repeated_stackedVectorObservation_codec);
             break;
           }
-          case 18: {
-            visualObservations_.AddEntriesFrom(input, _repeated_visualObservations_codec);
+          case 18:
+          case 21: {
+            stackedVectorObservation2D_.AddEntriesFrom(input, _repeated_stackedVectorObservation2D_codec);
             break;
           }
           case 26: {
+            visualObservations_.AddEntriesFrom(input, _repeated_visualObservations_codec);
+            break;
+          }
+          case 34: {
             TextObservation = input.ReadString();
             break;
           }
-          case 34:
-          case 37: {
+          case 42:
+          case 45: {
             storedVectorActions_.AddEntriesFrom(input, _repeated_storedVectorActions_codec);
             break;
           }
-          case 42: {
+          case 50: {
             StoredTextActions = input.ReadString();
             break;
           }
-          case 50:
-          case 53: {
+          case 58:
+          case 61: {
             memories_.AddEntriesFrom(input, _repeated_memories_codec);
             break;
           }
-          case 61: {
+          case 69: {
             Reward = input.ReadFloat();
             break;
           }
-          case 64: {
+          case 72: {
             Done = input.ReadBool();
             break;
           }
-          case 72: {
+          case 80: {
             MaxStepReached = input.ReadBool();
             break;
           }
-          case 80: {
+          case 88: {
             Id = input.ReadInt32();
+            break;
+          }
+          case 98:
+          case 96: {
+            actionMask_.AddEntriesFrom(input, _repeated_actionMask_codec);
             break;
           }
         }

@@ -13,8 +13,7 @@ from tensorflow.python.tools import freeze_graph
 from unitytrainers.ppo.trainer import PPOTrainer
 from unitytrainers.bc.trainer import BehavioralCloningTrainer
 from unityagents import UnityEnvironment, UnityEnvironmentException
-
-
+import pickle as pickle
 class TrainerController(object):
     def __init__(self, env_path, run_id, save_freq, curriculum_file, fast_simulation, load, train,
                  worker_id, keep_checkpoints, lesson, seed, docker_target_name, trainer_config_path,
@@ -217,7 +216,7 @@ class TrainerController(object):
         self._create_model_path(self.model_path)
 
         tf.reset_default_graph()
-
+        test = None
         with tf.Session() as sess:
             self._initialize_trainers(trainer_config, sess)
             for k, t in self.trainers.items():
@@ -241,6 +240,7 @@ class TrainerController(object):
                 for brain_name, trainer in self.trainers.items():
                     trainer.write_tensorboard_text('Hyperparameters', trainer.parameters)
             try:
+                trainer.summary_writer.add_graph(sess.graph)
                 while any([t.get_step <= t.get_max_steps for k, t in self.trainers.items()]) or not self.train_model:
                     if self.env.global_done:
                         self.env.curriculum.increment_lesson(self._get_progress())
@@ -248,20 +248,23 @@ class TrainerController(object):
                         for brain_name, trainer in self.trainers.items():
                             trainer.end_episode()
                     # Decide and take an action
-                    take_action_vector, take_action_memories, take_action_text, take_action_outputs = {}, {}, {}, {}
+                    take_action_vector, take_action_vector2, take_action_memories, take_action_text, take_action_outputs = {}, {}, {}, {}, {}
                     for brain_name, trainer in self.trainers.items():
                         (take_action_vector[brain_name],
+                         take_action_vector2[brain_name],
                          take_action_memories[brain_name],
                          take_action_text[brain_name],
                          take_action_outputs[brain_name]) = trainer.take_action(curr_info)
-                    new_info = self.env.step(vector_action=take_action_vector, memory=take_action_memories,
+                    new_info = self.env.step(vector_action={ k: take_action_vector.get(k, 0)*600 + take_action_vector2.get(k, 0) for k in set(take_action_vector) }, memory=take_action_memories,
                                              text_action=take_action_text)
+                    # print("got new info")
                     for brain_name, trainer in self.trainers.items():
                         trainer.add_experiences(curr_info, new_info, take_action_outputs[brain_name])
                         trainer.process_experiences(curr_info, new_info)
                         if trainer.is_ready_update() and self.train_model and trainer.get_step <= trainer.get_max_steps:
                             # Perform gradient descent with experience buffer
                             trainer.update_model()
+                            # print("updated model")
                         # Write training statistics to Tensorboard.
                         trainer.write_summary(self.env.curriculum.lesson_number)
                         if self.train_model and trainer.get_step <= trainer.get_max_steps:
@@ -272,6 +275,8 @@ class TrainerController(object):
                         # Save Tensorflow model
                         self._save_model(sess, steps=global_step, saver=saver)
                     curr_info = new_info
+                    print("Finished step ", global_step - 1)
+                    test=new_info
                 # Final save Tensorflow model
                 if global_step != 0 and self.train_model:
                     self._save_model(sess, steps=global_step, saver=saver)

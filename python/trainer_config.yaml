@@ -21,6 +21,29 @@ default:
     curiosity_strength: 0.01
     curiosity_enc_size: 128
 
+PalletizerBrain:
+    trainer: ppo
+    batch_size: 512
+    beta: 5.0e-3
+    buffer_size: 5120
+    epsilon: 0.2
+    gamma: 0.99
+    hidden_units: 128
+    lambd: 0.95
+    learning_rate: 3.0e-4
+    max_steps: 10.0e4
+    memory_size: 256
+    normalize: false
+    num_epoch: 3
+    num_layers: 2
+    time_horizon: 64
+    sequence_length: 64
+    summary_freq: 1000
+    use_recurrent: true
+    use_curiosity: true
+    curiosity_strength: 0.01
+    curiosity_enc_size: 128
+
 BananaBrain:
     normalize: false
     batch_size: 1024

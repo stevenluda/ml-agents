@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option csharp_namespace = "MLAgents.CommunicatorObjects";
+package communicator_objects;
+
+message AgentInfoProto {
+    repeated float stacked_vector_observation = 1;
+	repeated float stacked_vector_observation_2D = 2;
+    repeated bytes visual_observations = 3;
+    string text_observation = 4;
+    repeated float stored_vector_actions = 5;
+    string stored_text_actions = 6;
+    repeated float memories = 7;
+    float reward = 8;
+    bool done = 9;
+    bool max_step_reached = 10;
+    int32 id = 11;
+    repeated bool action_mask = 12;
+}

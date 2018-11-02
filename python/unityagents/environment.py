@@ -89,6 +89,8 @@ class UnityEnvironment(object):
             self._brains[brain_param.brain_name] = \
                 BrainParameters(brain_param.brain_name, {
                     "vectorObservationSize": brain_param.vector_observation_size,
+                    "vectorObservation2DLength": brain_param.vector_observation_2D_length,
+                    "vectorObservation2DWidth": brain_param.vector_observation_2D_width,
                     "numStackedVectorObservations": brain_param.num_stacked_vector_observations,
                     "cameraResolutions": resolution,
                     "vectorActionSize": brain_param.vector_action_size,
@@ -458,17 +460,26 @@ class UnityEnvironment(object):
             else:
                 [x.memories.extend([0] * (memory_size - len(x.memories))) for x in agent_info_list]
                 memory = np.array([x.memories for x in agent_info_list])
+
+            # test=np.array([np.array(x.stacked_vector_observation_2D).reshape(
+            #     (self.brains[b].vector_observation_2D_length, self.brains[b].vector_observation_2D_width)) for x in
+            #  agent_info_list])
+            # test2=test[0]
+            # print(test2[0,79])
+            # print("check")
             _data[b] = BrainInfo(
                 visual_observation=vis_obs,
                 vector_observation=np.array([x.stacked_vector_observation for x in agent_info_list]),
+                vector_observation_2D=np.array([np.array(x.stacked_vector_observation_2D).reshape((self.brains[b].vector_observation_2D_length, self.brains[b].vector_observation_2D_width, 1)) for x in agent_info_list]),
                 text_observations=[x.text_observation for x in agent_info_list],
                 memory=memory,
                 reward=[x.reward for x in agent_info_list],
                 agents=[x.id for x in agent_info_list],
                 local_done=[x.done for x in agent_info_list],
-                vector_action=np.array([x.stored_vector_actions for x in agent_info_list]),
+                vector_action=np.array([x.stored_vector_actions for x in agent_info_list])//600,
                 text_action=[x.stored_text_actions for x in agent_info_list],
-                max_reached=[x.max_step_reached for x in agent_info_list]
+                max_reached=[x.max_step_reached for x in agent_info_list],
+                vector_action2=np.array([x.stored_vector_actions for x in agent_info_list]) % 600
                 )
         return _data, global_done
 
