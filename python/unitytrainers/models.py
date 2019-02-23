@@ -295,49 +295,32 @@ class LearningModel(object):
         if self.use_recurrent:
             tf.Variable(self.m_size, name="memory_size", trainable=False, dtype=tf.int32)
             self.prev_action = tf.placeholder(shape=[None], dtype=tf.int32, name='prev_action')
-            self.prev_action2 = tf.placeholder(shape=[None], dtype=tf.int32, name="prev_action2")
-            prev_action_oh = tf.one_hot(self.prev_action, self.a_size-600)
-            prev_action_oh2= tf.one_hot(self.prev_action2, 600)
-            hidden = tf.concat([hidden, prev_action_oh, prev_action_oh2], axis=1)
+            prev_action_oh = tf.one_hot(self.prev_action, self.a_size)
+            hidden = tf.concat([hidden, prev_action_oh], axis=1)
 
             self.memory_in = tf.placeholder(shape=[None, self.m_size], dtype=tf.float32, name='recurrent_in')
             hidden, memory_out = self.create_recurrent_encoder(hidden, self.memory_in, self.sequence_length)
             self.memory_out = tf.identity(memory_out, name='recurrent_out')
 
-        self.policy = tf.layers.dense(hidden, self.a_size-600, activation=None, use_bias=False,
+        self.policy = tf.layers.dense(hidden, self.a_size, activation=None, use_bias=False,
                                       kernel_initializer=c_layers.variance_scaling_initializer(factor=0.01))
-        self.policy2 = tf.layers.dense(hidden, 600, activation=None, use_bias=False, kernel_initializer=c_layers.variance_scaling_initializer(factor=0.01))
-        binDimensionsInfoReshaped = tf.reshape(self.vector_in,[-1,100,4])
-        binDimensionsInfoReshapedReducedSum = tf.reduce_sum(binDimensionsInfoReshaped,[2])
-        binDimensionsInfoReshapeReducedSumReplicate = tf.tile(binDimensionsInfoReshapedReducedSum,[1,6])
-        self.policy2Conditioned = tf.where(tf.equal(binDimensionsInfoReshapeReducedSumReplicate,0), self.policy2, tf.zeros_like(self.policy2))
         self.all_probs = tf.nn.softmax(self.policy, name="action_probs")
-        self.all_probs2 = tf.nn.softmax(self.policy2Conditioned, name="action_probs2")
         output = tf.multinomial(self.policy, 1)
-        # ORIGINAL: self.output = tf.identity(output, name="action")
-        output2 = tf.multinomial(self.policy2, 1)
         self.output = tf.identity(output, name="action")
-        self.output2 = tf.identity(output2, name="action2")
 
         value = tf.layers.dense(hidden, 1, activation=None)
         self.value = tf.identity(value, name="value_estimate")
-        entropy1 = -tf.reduce_sum(self.all_probs * tf.log(self.all_probs + 1e-10), axis=1)
-        entropy2 = -tf.reduce_sum(self.all_probs2 * tf.log(self.all_probs2 + 1e-10), axis=1)
-        self.entropy = (entropy1 + entropy2)/2.0
+        self.entropy = -tf.reduce_sum(self.all_probs * tf.log(self.all_probs + 1e-10), axis=1)
 
         self.action_holder = tf.placeholder(shape=[None], dtype=tf.int32)
-        self.action_holder2 = tf.placeholder(shape=[None], dtype=tf.int32)
-        #ORIGINAL self.selected_actions = tf.one_hot(self.action_holder, self.a_size)
-        self.selected_actions = tf.one_hot(self.action_holder, self.a_size-600)
-        self.selected_actions2 = tf.one_hot(self.action_holder2, 600)
+        self.selected_actions = tf.one_hot(self.action_holder, self.a_size)
 
-        self.all_old_probs = tf.placeholder(shape=[None, self.a_size-600], dtype=tf.float32, name='old_probabilities')
-        self.all_old_probs2 = tf.placeholder(shape=[None, 600], dtype=tf.float32, name='old_probabilities2')
+        self.all_old_probs = tf.placeholder(shape=[None, self.a_size], dtype=tf.float32, name='old_probabilities')
+
         # We reshape these tensors to [batch x 1] in order to be of the same rank as continuous control probabilities.
         self.probs = tf.expand_dims(tf.reduce_sum(self.all_probs * self.selected_actions, axis=1), 1)
         self.old_probs = tf.expand_dims(tf.reduce_sum(self.all_old_probs * self.selected_actions, axis=1), 1)
-        self.probs2 = tf.expand_dims(tf.reduce_sum(self.all_probs2 * self.selected_actions2, axis=1), 1)
-        self.old_probs2 = tf.expand_dims(tf.reduce_sum(self.all_old_probs2 * self.selected_actions2, axis=1), 1)
+        
 
     def create_cc_actor_critic(self, h_size, num_layers):
         """
