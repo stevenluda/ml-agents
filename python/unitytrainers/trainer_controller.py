@@ -216,7 +216,6 @@ class TrainerController(object):
         self._create_model_path(self.model_path)
 
         tf.reset_default_graph()
-        test = None
         with tf.Session() as sess:
             self._initialize_trainers(trainer_config, sess)
             for k, t in self.trainers.items():
@@ -248,14 +247,13 @@ class TrainerController(object):
                         for brain_name, trainer in self.trainers.items():
                             trainer.end_episode()
                     # Decide and take an action
-                    take_action_vector, take_action_vector2, take_action_memories, take_action_text, take_action_outputs = {}, {}, {}, {}, {}
+                    take_action_vector, take_action_memories, take_action_text, take_action_outputs = {}, {}, {}, {}
                     for brain_name, trainer in self.trainers.items():
                         (take_action_vector[brain_name],
-                         take_action_vector2[brain_name],
                          take_action_memories[brain_name],
                          take_action_text[brain_name],
                          take_action_outputs[brain_name]) = trainer.take_action(curr_info)
-                    new_info = self.env.step(vector_action={ k: take_action_vector.get(k, 0)*600 + take_action_vector2.get(k, 0) for k in set(take_action_vector) }, memory=take_action_memories,
+                    new_info = self.env.step(vector_action=take_action_vector, memory=take_action_memories,
                                              text_action=take_action_text)
                     # print("got new info")
                     for brain_name, trainer in self.trainers.items():
@@ -276,7 +274,6 @@ class TrainerController(object):
                         self._save_model(sess, steps=global_step, saver=saver)
                     curr_info = new_info
                     print("Finished step ", global_step - 1)
-                    test=new_info
                 # Final save Tensorflow model
                 if global_step != 0 and self.train_model:
                     self._save_model(sess, steps=global_step, saver=saver)
